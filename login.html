@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f9fc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .card {
+      background: #fff;
+      padding: 30px;
+      border-radius: 20px;
+      width: 350px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #d62828;
+    }
+    label {
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0 16px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: #2a9d8f;
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #21867a;
+    }
+    .link {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+    a { color: #d62828; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Log In</h1>
+
+    <label>Phone Number</label>
+    <input id="phone" type="text" placeholder="1234567890" />
+
+    <label>Password</label>
+    <input id="password" type="password" placeholder="Enter password" />
+
+    <button onclick="login()">Log In</button>
+
+    <div class="link">
+      Don't have an account? <a href="signup.html">Sign up</a>
+    </div>
+  </div>
+
+<script>
+  function hash(text) {
+    return btoa(text);
+  }
+
+  function login() {
+    const phone = document.getElementById("phone").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!phone || !password) {
+      alert("Please enter both phone number and password.");
+      return;
+    }
+
+    let users = JSON.parse(localStorage.getItem("users") || "{}");
+
+    if (!users[phone]) {
+      alert("No account found with that phone number.");
+      return;
+    }
+
+    if (users[phone].password !== hash(password)) {
+      alert("Incorrect password.");
+      return;
+    }
+
+    localStorage.setItem("loggedInUser", phone);
+
+    window.location.href = "tracker.html";
+  }
+</script>
+</body>
+</html>
