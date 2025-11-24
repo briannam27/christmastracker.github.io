@@ -7,9 +7,22 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #ffffff;
+      background: #f7f9fc;
       margin: 0;
       padding: 0;
+    }
+    .topbar {
+      background: #d62828;
+      padding: 15px;
+      color: #fff;
+      font-size: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logout {
+      cursor: pointer;
+      font-weight: bold;
     }
     .container {
       max-width: 1100px;
@@ -23,66 +36,74 @@
       margin-bottom: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    h1, h2, h3 {
-      margin: 0 0 10px;
+    h2 {
+      margin-top: 0;
+      color: #d62828;
+    }
+    input {
+      padding: 10px;
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+      font-size: 15px;
     }
     button {
       cursor: pointer;
       border: none;
-      border-radius: 8px;
-      padding: 8px 14px;
+      padding: 10px 16px;
+      border-radius: 10px;
       font-weight: bold;
+      font-size: 15px;
     }
-    .btn-red {
-      background: #e63946;
-      color: #fff;
-    }
-    .btn-green {
-      background: #2a9d8f;
-      color: #fff;
-    }
-    input {
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      width: 100%;
-      box-sizing: border-box;
-    }
+    .btn-green { background: #2a9d8f; color: #fff; }
+    .btn-red { background: #e63946; color: #fff; }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
     }
-    .person-card {
+    .card {
       background: linear-gradient(135deg, #ff6b6b, #d62828);
       color: #fff;
-      padding: 20px;
-      border-radius: 15px;
-      position: relative;
+      padding: 18px;
+      border-radius: 18px;
     }
-    .purchase {
+    .purchase-box {
       background: rgba(255,255,255,0.2);
-      padding: 8px;
-      border-radius: 8px;
+      padding: 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+    .item-row {
+      display: flex;
+      justify-content: space-between;
       margin-bottom: 6px;
+    }
+    .inline-inputs input {
+      width: 48%;
+      display: inline-block;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1 style="text-align:center; font-size:40px; color:#d62828;">🎄 Christmas Budget Tracker 🎄</h1>
+  <div class="topbar">
+    <span>🎄 Welcome, <span id="userName"></span>!</span>
+    <span class="logout" onclick="logout()">Log Out</span>
+  </div>
 
-    <!-- Overall Budget -->
+  <div class="container">
+
     <div class="section">
       <h2>Overall Budget</h2>
       <input id="overallBudgetInput" type="number" placeholder="Enter total budget" />
       <button class="btn-green" onclick="setOverallBudget()">Save Budget</button>
-      <p><strong>Budget:</strong> $<span id="overallBudget">0</span></p>
-      <p><strong>Spent:</strong> $<span id="totalSpent">0</span></p>
-      <p><strong>Remaining:</strong> $<span id="remaining">0</span></p>
+      <p><strong>Budget:</strong> $<span id="overallBudget">0.00</span></p>
+      <p><strong>Spent:</strong> $<span id="totalSpent">0.00</span></p>
+      <p><strong>Remaining:</strong> $<span id="remaining">0.00</span></p>
     </div>
 
-    <!-- Add Person -->
     <div class="section">
       <h2>Add Person</h2>
       <input id="personName" type="text" placeholder="Name" />
@@ -90,19 +111,41 @@
       <button class="btn-red" onclick="addPerson()">Add</button>
     </div>
 
-    <!-- People Grid -->
     <div id="peopleGrid" class="grid"></div>
   </div>
 
 <script>
-  let people = [];
-  let purchases = [];
-  let overallBudget = 0;
+  let users = JSON.parse(localStorage.getItem("users") || "{}");
+  let phone = localStorage.getItem("loggedInUser");
+
+  if (!phone || !users[phone]) {
+    window.location.href = "login.html";
+  }
+
+  let user = users[phone];
+
+  document.getElementById("userName").innerText = user.name;
+
+  let overallBudget = user.data.overallBudget || 0;
+  let people = user.data.people || [];
+  let purchases = user.data.purchases || [];
+
+  function saveUser() {
+    user.data = { overallBudget, people, purchases };
+    users[phone] = user;
+    localStorage.setItem("users", JSON.stringify(users));
+  }
+
+  function logout() {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "login.html";
+  }
 
   function setOverallBudget() {
     const val = parseFloat(document.getElementById("overallBudgetInput").value);
     if (!isNaN(val)) {
       overallBudget = val;
+      saveUser();
       updateTotals();
     }
   }
@@ -115,26 +158,35 @@
     people.push({ id: Date.now(), name, budget });
     document.getElementById("personName").value = '';
     document.getElementById("personBudget").value = '';
+    saveUser();
     renderPeople();
   }
 
   function addPurchase(personId) {
-    const item = prompt("Item name:");
-    const amount = parseFloat(prompt("Amount:"));
+    const item = document.getElementById(`item-${personId}`).value;
+    const amount = parseFloat(document.getElementById(`amount-${personId}`).value);
+
     if (!item || isNaN(amount)) return;
 
     purchases.push({ id: Date.now(), personId, item, amount });
+
+    document.getElementById(`item-${personId}`).value = '';
+    document.getElementById(`amount-${personId}`).value = '';
+
+    saveUser();
     renderPeople();
   }
 
   function deletePurchase(id) {
     purchases = purchases.filter(p => p.id !== id);
+    saveUser();
     renderPeople();
   }
 
   function deletePerson(id) {
     people = people.filter(p => p.id !== id);
     purchases = purchases.filter(p => p.personId !== id);
+    saveUser();
     renderPeople();
   }
 
@@ -157,20 +209,26 @@
       const spent = getPersonSpending(person.id);
 
       const card = document.createElement("div");
-      card.className = "person-card";
+      card.className = "card";
 
       card.innerHTML = `
         <h3>${person.name}</h3>
-        <p><strong>Budget:</strong> $${person.budget}</p>
-        <p><strong>Spent:</strong> $${spent}</p>
-        <p><strong>Left:</strong> $${(person.budget - spent)}</p>
-        <button class="btn-green" onclick="addPurchase(${person.id})">Add Purchase</button>
+        <p><strong>Budget:</strong> $${person.budget.toFixed(2)}</p>
+        <p><strong>Spent:</strong> $${spent.toFixed(2)}</p>
+        <p><strong>Left:</strong> $${(person.budget - spent).toFixed(2)}</p>
+
+        <div class="inline-inputs">
+          <input id="item-${person.id}" type="text" placeholder="Item name" />
+          <input id="amount-${person.id}" type="number" step="0.01" placeholder="Price" />
+        </div>
+        <button class="btn-green" onclick="addPurchase(${person.id})">Add</button>
         <button class="btn-red" onclick="deletePerson(${person.id})">Delete Person</button>
-        <div style="margin-top:10px;">
+
+        <div class="purchase-box">
           ${purchases.filter(p => p.personId === person.id).map(p=>`
-            <div class='purchase'>
-              ${p.item} - $${p.amount}
-              <button onclick="deletePurchase(${p.id})" style='float:right; background:#fff; color:#d62828;'>X</button>
+            <div class='item-row'>
+              <span>${p.item} - $${p.amount.toFixed(2)}</span>
+              <button class="btn-red" style="padding:4px 8px;" onclick="deletePurchase(${p.id})">X</button>
             </div>
           `).join('')}
         </div>
@@ -181,6 +239,8 @@
 
     updateTotals();
   }
+
+  renderPeople();
 </script>
 </body>
 </html>
