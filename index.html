@@ -3,88 +3,157 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Create Account</title>
+  <title>Christmas Budget Tracker</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #d62828, #ff9f9f);
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #fff;
-    }
-    .card {
-      background: rgba(255, 255, 255, 0.15);
-      padding: 40px;
-      border-radius: 20px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 4px 18px rgba(0,0,0,0.2);
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-    }
-    h1 { margin-bottom: 20px; font-size: 32px; }
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 10px;
-      border: none;
-      font-size: 16px;
-    }
-    button {
-      padding: 12px 20px;
-      margin-top: 10px;
-      border-radius: 10px;
-      border: none;
-      background: #fff;
-      color: #d62828;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 16px;
-      width: 100%;
-    }
-    button:hover { background: #ffecec; }
-    .login-link { margin-top: 15px; font-size: 14px; }
-    .login-link a { color: #fff; font-weight: bold; text-decoration: underline; }
+    body { font-family: Arial, sans-serif; background: #ffffff; margin: 0; padding: 0; }
+    .container { max-width: 1100px; margin: auto; padding: 20px; }
+    .section { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    h1, h2, h3 { margin: 0 0 10px; }
+    button { cursor: pointer; border: none; border-radius: 8px; padding: 8px 14px; font-weight: bold; }
+    .btn-red { background: #e63946; color: #fff; }
+    .btn-green { background: #2a9d8f; color: #fff; }
+    input { padding: 8px; border-radius: 6px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+    .person-card { background: linear-gradient(135deg, #ff6b6b, #d62828); color: #fff; padding: 20px; border-radius: 15px; position: relative; }
+    .purchase { background: rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; margin-bottom: 6px; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Create Account</h1>
-    <input type="text" id="name" placeholder="Name" />
-    <input type="text" id="phone" placeholder="Phone Number" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="createAccount()">Create Account</button>
-    <div class="login-link">
-      Already have an account? <a href="login.html">Log in</a>
+  <div class="container">
+    <h1 style="text-align:center; font-size:40px; color:#d62828;">🎄 Christmas Budget Tracker 🎄</h1>
+
+    <!-- Overall Budget -->
+    <div class="section">
+      <h2>Overall Budget</h2>
+      <input id="overallBudgetInput" type="number" placeholder="Enter total budget" />
+      <button class="btn-green" onclick="setOverallBudget()">Save Budget</button>
+      <p><strong>Budget:</strong> $<span id="overallBudget">0</span></p>
+      <p><strong>Spent:</strong> $<span id="totalSpent">0</span></p>
+      <p><strong>Remaining:</strong> $<span id="remaining">0</span></p>
     </div>
+
+    <!-- Add Person -->
+    <div class="section">
+      <h2>Add Person</h2>
+      <input id="personName" type="text" placeholder="Name" />
+      <input id="personBudget" type="number" placeholder="Budget" />
+      <button class="btn-red" onclick="addPerson()">Add</button>
+    </div>
+
+    <!-- People Grid -->
+    <div id="peopleGrid" class="grid"></div>
   </div>
 
-  <script>
-    function createAccount() {
-      const name = document.getElementById('name').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      const password = document.getElementById('password').value;
-      if (!name || !phone || !password) {
-        alert('Please fill out all fields');
-        return;
-      }
+<script>
+  let users = JSON.parse(localStorage.getItem('users') || '{}');
+  let loggedInUser = localStorage.getItem('loggedInUser');
+  if (!loggedInUser || !users[loggedInUser]) {
+    alert('No user logged in. Redirecting to login.');
+    window.location.href = 'login.html';
+  }
 
-      let users = JSON.parse(localStorage.getItem('users') || '{}');
-      if (users[phone]) {
-        alert('Account with this phone number already exists');
-        return;
-      }
+  let userData = users[loggedInUser].data;
 
-      users[phone] = { name, password, data: { overallBudget: 0, people: [], purchases: [] } };
-      localStorage.setItem('users', JSON.stringify(users));
-      localStorage.setItem('loggedInUser', phone);
-      window.location.href = 'tracker.html';
+  let people = userData.people;
+  let purchases = userData.purchases;
+  let overallBudget = userData.overallBudget;
+
+  function saveUserData() {
+    users[loggedInUser].data = { people, purchases, overallBudget };
+    localStorage.setItem('users', JSON.stringify(users));
+  }
+
+  function setOverallBudget() {
+    const val = parseFloat(document.getElementById("overallBudgetInput").value);
+    if (!isNaN(val)) {
+      overallBudget = val;
+      saveUserData();
+      updateTotals();
     }
-  </script>
+  }
+
+  function addPerson() {
+    const name = document.getElementById("personName").value;
+    const budget = parseFloat(document.getElementById("personBudget").value);
+    if (!name || isNaN(budget)) return;
+
+    people.push({ id: Date.now(), name, budget });
+    document.getElementById("personName").value = '';
+    document.getElementById("personBudget").value = '';
+    saveUserData();
+    renderPeople();
+  }
+
+  function addPurchase(personId) {
+    const itemInput = document.getElementById(`itemInput-${personId}`);
+    const amountInput = document.getElementById(`amountInput-${personId}`);
+    const item = itemInput.value.trim();
+    const amount = parseFloat(amountInput.value);
+    if (!item || isNaN(amount)) return;
+
+    purchases.push({ id: Date.now(), personId, item, amount: parseFloat(amount.toFixed(2)) });
+    itemInput.value = '';
+    amountInput.value = '';
+    saveUserData();
+    renderPeople();
+  }
+
+  function deletePurchase(id) {
+    purchases = purchases.filter(p => p.id !== id);
+    saveUserData();
+    renderPeople();
+  }
+
+  function deletePerson(id) {
+    people = people.filter(p => p.id !== id);
+    purchases = purchases.filter(p => p.personId !== id);
+    saveUserData();
+    renderPeople();
+  }
+
+  function getPersonSpending(id) {
+    return purchases.filter(p => p.personId === id).reduce((a,b)=>a+b.amount,0);
+  }
+
+  function updateTotals() {
+    const totalSpent = purchases.reduce((a,b)=>a+b.amount,0);
+    document.getElementById("overallBudget").innerText = overallBudget.toFixed(2);
+    document.getElementById("totalSpent").innerText = totalSpent.toFixed(2);
+    document.getElementById("remaining").innerText = (overallBudget-totalSpent).toFixed(2);
+  }
+
+  function renderPeople() {
+    const grid = document.getElementById("peopleGrid");
+    grid.innerHTML = '';
+
+    people.forEach(person => {
+      const spent = getPersonSpending(person.id);
+      const card = document.createElement("div");
+      card.className = "person-card";
+      card.innerHTML = `
+        <h3>${person.name}</h3>
+        <p><strong>Budget:</strong> $${person.budget.toFixed(2)}</p>
+        <p><strong>Spent:</strong> $${spent.toFixed(2)}</p>
+        <p><strong>Left:</strong> $${(person.budget - spent).toFixed(2)}</p>
+        <input id="itemInput-${person.id}" type="text" placeholder="Gift Name" style='margin-top:5px;' />
+        <input id="amountInput-${person.id}" type="number" placeholder="Amount" style='margin-top:5px;' />
+        <button class="btn-green" onclick="addPurchase(${person.id})">Add Purchase</button>
+        <button class="btn-red" onclick="deletePerson(${person.id})">Delete Person</button>
+        <div style="margin-top:10px;">
+          ${purchases.filter(p => p.personId === person.id).map(p=>`
+            <div class='purchase'>
+              ${p.item} - $${p.amount.toFixed(2)}
+              <button onclick="deletePurchase(${p.id})" style='float:right; background:#fff; color:#d62828;'>X</button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+    updateTotals();
+  }
+
+  renderPeople();
+</script>
 </body>
 </html>
