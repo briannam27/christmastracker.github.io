@@ -3,49 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Progress Tracker - Sign Up</title>
+  <title>Welcome</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f3f8ff; margin: 0; padding: 0; }
-    .container { max-width: 400px; margin: 60px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    h2 { text-align: center; color: #1a4ba3; }
-    label { font-weight: bold; display: block; margin-top: 15px; }
-    input { width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc; }
-    button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; margin-top: 20px; cursor: pointer; font-size: 16px; }
-    button:hover { background: #155ac1; }
-    .error { color: red; margin-top: 10px; text-align: center; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #d62828, #ff9f9f);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      text-align: center;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 40px;
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.2);
+      max-width: 400px;
+    }
+    h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 16px;
+      margin-bottom: 25px;
+    }
+    a button {
+      padding: 12px 22px;
+      border: none;
+      border-radius: 10px;
+      background: #fff;
+      color: #d62828;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    a button:hover {
+      background: #ffecec;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Create Your Account</h2>
-    <label>Name</label>
-    <input type="text" id="name" placeholder="Enter your name" />
-
-    <label>Phone Number</label>
-    <input type="text" id="phone" placeholder="Enter your number" />
-
-    <button onclick="createAccount()">Create Account</button>
-    <p class="error" id="error"></p>
+  <div class="card">
+    <h1>🎄 Welcome!</h1>
+    <p>Your Christmas Budget Tracker awaits. Log in to continue.</p>
+    <a href="login.html"><button>Go to Login</button></a>
   </div>
-
-  <script>
-    function createAccount() {
-      const name = document.getElementById('name').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      const error = document.getElementById('error');
-
-      if (!name || !phone) {
-        error.textContent = "Please enter both name and phone number.";
-        return;
-      }
-
-      // Save the profile locally
-      const profile = { name, phone };
-      localStorage.setItem('progressTrackerUser', JSON.stringify(profile));
-
-      // Redirect to the tracker page
-      window.location.href = "tracker.html";
-    }
-  </script>
 </body>
 </html>
